@@ -1,0 +1,60 @@
+<section class="card panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Auditoria</p>
+      <h3>Registro de eventos</h3>
+      <p class="lead">Historico sincronizado em tempo real.</p>
+    </div>
+    <span class="pill">{{ logsCounterText }}</span>
+  </div>
+
+  <div class="panel-body">
+    @if (!logs.length) {
+      <div class="empty-state">Nenhum log encontrado.</div>
+    } @else {
+      @for (entry of logs; track entry.id) {
+        <article class="log-card">
+          <div class="log-top">
+            <div>
+              <p class="mini-label">Evento</p>
+              <p class="log-user">{{ entry.usuarioLogin }}</p>
+              <p class="log-action">{{ entry.acao }}</p>
+            </div>
+            <span class="pill" [class.pill-error]="entry.resultado !== 'sucesso'">
+              {{ entry.resultado }}
+            </span>
+          </div>
+
+          <div class="log-grid">
+            <div class="log-meta">
+              <p class="mini-label">Usuario ID</p>
+              <p>{{ entry.usuarioId }}</p>
+            </div>
+            <div class="log-meta">
+              <p class="mini-label">Data e hora</p>
+              <p>{{ entry.dataHora }}</p>
+            </div>
+            <div class="log-meta">
+              <p class="mini-label">Acao</p>
+              <p>{{ entry.acao }}</p>
+            </div>
+          </div>
+        </article>
+      }
+
+      @if (totalPaginasLogs > 1) {
+        <div class="pagination">
+          <p>Pagina <strong>{{ logsPagina }}</strong> de <strong>{{ totalPaginasLogs }}</strong></p>
+          <div class="pagination-actions">
+            <button class="secondary-button" type="button" [disabled]="logsPagina === 1" (click)="paginaAnterior.emit()">
+              Anterior
+            </button>
+            <button class="secondary-button" type="button" [disabled]="logsPagina === totalPaginasLogs" (click)="proximaPagina.emit()">
+              Proxima
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</section>

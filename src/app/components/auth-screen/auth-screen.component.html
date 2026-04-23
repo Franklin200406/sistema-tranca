@@ -1,0 +1,77 @@
+<section class="auth-screen">
+  <div class="auth-card card">
+    <div class="auth-header">
+      <div class="lock-badge">
+        <span class="material-symbols-outlined">lock</span>
+      </div>
+      <p class="eyebrow">Acesso Seguro</p>
+      <h1>Tranca Eletronica</h1>
+      <p class="lead">
+        Entre com seu login cadastrado no Firebase Realtime Database para liberar o painel.
+      </p>
+    </div>
+
+    <div class="auth-switch">
+      <button type="button" class="switch-button" [class.active]="authMode === 'login'" (click)="setMode('login')">
+        Entrar
+      </button>
+      <button type="button" class="switch-button" [class.active]="authMode === 'register'" (click)="setMode('register')">
+        Cadastrar
+      </button>
+    </div>
+
+    @if (authMode === 'login') {
+      <form class="form-stack" (ngSubmit)="submitLogin()">
+        <label class="field">
+          <span>Login</span>
+          <input [(ngModel)]="login" name="login" type="text" autocomplete="username" placeholder="Digite seu login" required />
+        </label>
+
+        <label class="field">
+          <span>Senha</span>
+          <input [(ngModel)]="senha" name="senha" type="password" autocomplete="current-password" placeholder="Digite sua senha" required />
+        </label>
+
+        <button class="primary-button" type="submit" [disabled]="loginLoading || !firebasePronto">
+          <span class="material-symbols-outlined">{{ loginLoading ? 'progress_activity' : 'login' }}</span>
+          <span>{{ loginLoading ? 'Validando...' : 'Entrar' }}</span>
+        </button>
+      </form>
+    } @else {
+      <form class="form-stack" (ngSubmit)="submitRegister()">
+        <label class="field">
+          <span>Nome</span>
+          <input [(ngModel)]="registerNome" name="registerNome" type="text" placeholder="Seu nome" required />
+        </label>
+
+        <label class="field">
+          <span>Login</span>
+          <input [(ngModel)]="registerLogin" name="registerLogin" type="text" autocomplete="username" placeholder="Crie um login" required />
+        </label>
+
+        <label class="field">
+          <span>Senha</span>
+          <input [(ngModel)]="registerSenha" name="registerSenha" type="password" autocomplete="new-password" placeholder="Crie uma senha" required />
+        </label>
+
+        <button class="primary-button" type="submit" [disabled]="registerLoading || !firebasePronto">
+          <span class="material-symbols-outlined">{{ registerLoading ? 'progress_activity' : 'person_add' }}</span>
+          <span>{{ registerLoading ? 'Cadastrando...' : 'Cadastrar' }}</span>
+        </button>
+      </form>
+    }
+
+    @if (loginError) {
+      <p [class]="feedbackClasses('error').join(' ')">{{ loginError }}</p>
+    }
+
+    @if (registerFeedback) {
+      <p [class]="feedbackClasses(registerFeedbackType).join(' ')">{{ registerFeedback }}</p>
+    }
+
+    <div class="info-box">
+      Estrutura esperada: <strong>usuarios</strong>, <strong>tranca/status</strong> e
+      <strong>logs</strong>.
+    </div>
+  </div>
+</section>

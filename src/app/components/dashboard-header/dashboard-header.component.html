@@ -1,0 +1,29 @@
+<header class="dashboard-header">
+  <div class="brand-block">
+    <span class="brand-icon material-symbols-outlined">shield_lock</span>
+    <div>
+      <p class="eyebrow">Dashboard</p>
+      <h2>Central da Tranca</h2>
+      <p class="lead">
+        Monitoramento e controle em tempo real, com auditoria de acoes e permissoes por usuario.
+      </p>
+    </div>
+  </div>
+
+  <div class="header-actions">
+    <div class="session-card">
+      <p class="mini-label">Sessao</p>
+      <div class="session-chips">
+        <span class="chip chip-strong">{{ usuarioLogin }}</span>
+        <span class="chip">ID: {{ usuarioId }}</span>
+        <span class="chip chip-success">Nivel: {{ usuarioNivel }}</span>
+        <span class="chip">Status: {{ usuarioStatus }}</span>
+      </div>
+    </div>
+
+    <button class="secondary-button" type="button" (click)="logout.emit()">
+      <span class="material-symbols-outlined">logout</span>
+      <span>Sair</span>
+    </button>
+  </div>
+</header>

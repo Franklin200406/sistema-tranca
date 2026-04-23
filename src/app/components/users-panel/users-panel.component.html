@@ -1,0 +1,62 @@
+<section class="card panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Administracao</p>
+      <h3>Usuarios</h3>
+      <p class="lead">Clique em um usuario para ajustar permissoes.</p>
+    </div>
+  </div>
+
+  <div class="panel-body">
+    @if (!usuarios.length) {
+      <div class="empty-state">Nenhum usuario carregado.</div>
+    } @else {
+      @for (item of usuarios; track item.id) {
+        <article class="user-card" [class.user-card-open]="usuarioExpandido(item.id)">
+          <button class="user-summary" type="button" (click)="toggleUsuario.emit(item.id)">
+            <div>
+              <p class="log-user">{{ item.login }}</p>
+              <p class="mini-label">ID: {{ item.id }} · {{ item.ativo ? 'Ativo' : 'Inativo' }} · Nivel: {{ item.nivel }}</p>
+            </div>
+            <div class="user-summary-right">
+              <span class="pill" [class.pill-warning]="!item.podeDestrancar">
+                {{ item.podeDestrancar ? 'Pode destrancar' : 'Bloqueado' }}
+              </span>
+              <span class="material-symbols-outlined">
+                {{ usuarioExpandido(item.id) ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
+              </span>
+            </div>
+          </button>
+
+          @if (usuarioExpandido(item.id)) {
+            <div class="user-details">
+              <p class="lead">Altere se este usuario pode abrir a trava.</p>
+              <label class="permission-toggle">
+                <input
+                  type="checkbox"
+                  [checked]="item.podeDestrancar"
+                  (change)="atualizarPermissao.emit({ userId: item.id, event: $event })"
+                />
+                <span>Pode destrancar o cofre</span>
+              </label>
+            </div>
+          }
+        </article>
+      }
+
+      @if (totalPaginasAdmin > 1) {
+        <div class="pagination">
+          <p>Pagina <strong>{{ adminUsuariosPagina }}</strong> de <strong>{{ totalPaginasAdmin }}</strong></p>
+          <div class="pagination-actions">
+            <button class="secondary-button" type="button" [disabled]="adminUsuariosPagina === 1" (click)="paginaAnterior.emit()">
+              Anterior
+            </button>
+            <button class="secondary-button" type="button" [disabled]="adminUsuariosPagina === totalPaginasAdmin" (click)="proximaPagina.emit()">
+              Proxima
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</section>

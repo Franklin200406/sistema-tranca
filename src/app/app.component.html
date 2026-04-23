@@ -1,0 +1,70 @@
+<div class="app-shell">
+  <div class="app-background"></div>
+
+  @if (!logado) {
+    <app-auth-screen
+      [authMode]="authMode"
+      [loginLoading]="loginLoading"
+      [registerLoading]="registerLoading"
+      [firebasePronto]="firebasePronto"
+      [loginError]="loginError"
+      [registerFeedback]="registerFeedback"
+      [registerFeedbackType]="registerFeedbackType"
+      [loginPreenchido]="loginPreenchidoAposCadastro"
+      (authModeChange)="setAuthMode($event)"
+      (loginSubmit)="onLoginSubmit($event)"
+      (registerSubmit)="onRegisterSubmit($event)"
+    />
+  } @else {
+    <section class="dashboard-screen">
+      <app-dashboard-header
+        [usuarioLogin]="usuarioAtualLogin"
+        [usuarioId]="usuarioAtualId"
+        [usuarioNivel]="usuarioAtualNivel"
+        [usuarioStatus]="usuarioAtualStatus"
+        (logout)="logout()"
+      />
+
+      <main class="dashboard-content">
+        <app-lock-panel
+          [dashboardMessage]="dashboardMessage"
+          [dashboardFeedback]="dashboardFeedback"
+          [dashboardFeedbackType]="dashboardFeedbackType"
+          [lockButtonClasses]="lockButtonClasses"
+          [podeInteragirComTranca]="podeInteragirComTranca"
+          [lockIcon]="lockIcon"
+          [lockStatusLabel]="lockStatusLabel"
+          [lockStatusHint]="lockStatusHint"
+          [statusText]="statusText"
+          [nextActionText]="nextActionText"
+          [ultimaAcao]="ultimaAcao"
+          (alternarTranca)="alternarTranca()"
+        />
+
+        @if (usuarioEhAdmin()) {
+          <div class="grid-panels">
+            <app-logs-panel
+              [logsCounterText]="logsCounterText"
+              [logs]="logsPaginadosView"
+              [logsPagina]="logsPagina"
+              [totalPaginasLogs]="totalPaginasLogs"
+              (paginaAnterior)="paginaAnteriorLogs()"
+              (proximaPagina)="proximaPaginaLogs()"
+            />
+
+            <app-users-panel
+              [usuarios]="usuariosPaginadosView"
+              [usuarioSelecionadoId]="adminUsuarioSelecionadoId"
+              [adminUsuariosPagina]="adminUsuariosPagina"
+              [totalPaginasAdmin]="totalPaginasAdmin"
+              (toggleUsuario)="toggleUsuarioExpandido($event)"
+              (atualizarPermissao)="atualizarPermissaoUsuario($event.userId, $event.event)"
+              (paginaAnterior)="paginaAnteriorAdmin()"
+              (proximaPagina)="proximaPaginaAdmin()"
+            />
+          </div>
+        }
+      </main>
+    </section>
+  }
+</div>

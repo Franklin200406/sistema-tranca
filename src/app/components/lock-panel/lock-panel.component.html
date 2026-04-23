@@ -1,0 +1,33 @@
+<section class="hero card">
+  <div class="hero-copy">
+    <p class="eyebrow">Controle Principal</p>
+    <h2>Painel da Tranca</h2>
+    <p class="lead">{{ dashboardMessage }}</p>
+
+    @if (dashboardFeedback) {
+      <p [class]="feedbackClasses(dashboardFeedbackType).join(' ')">{{ dashboardFeedback }}</p>
+    }
+  </div>
+
+  <button type="button" [class]="lockButtonClasses.join(' ')" [disabled]="!podeInteragirComTranca" (click)="alternarTranca.emit()">
+    <span class="lock-glow"></span>
+    <span class="material-symbols-outlined lock-icon">{{ lockIcon }}</span>
+    <span class="lock-label">{{ lockStatusLabel }}</span>
+    <span class="lock-hint">{{ lockStatusHint }}</span>
+  </button>
+
+  <div class="stats-grid">
+    <article class="stat-card">
+      <p class="mini-label">Status atual</p>
+      <p class="stat-value">{{ statusText }}</p>
+    </article>
+    <article class="stat-card">
+      <p class="mini-label">Acao ao clicar</p>
+      <p class="stat-value">{{ nextActionText }}</p>
+    </article>
+    <article class="stat-card">
+      <p class="mini-label">Ultima intencao</p>
+      <p class="stat-value">{{ ultimaAcao }}</p>
+    </article>
+  </div>
+</section>
