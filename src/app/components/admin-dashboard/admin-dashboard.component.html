@@ -1,0 +1,262 @@
+<section class="admin-dashboard">
+  <!-- Stats Cards -->
+  <div class="stats-row">
+    <article class="stat-card-dash">
+      <div class="stat-icon stat-icon-users">
+        <span class="material-symbols-outlined">group</span>
+      </div>
+      <div class="stat-info">
+        <p class="stat-label">Usuarios</p>
+        <p class="stat-number">{{ stats.totalUsuarios }}</p>
+        <p class="stat-detail">{{ stats.usuariosAtivos }} ativos</p>
+      </div>
+    </article>
+    <article class="stat-card-dash">
+      <div class="stat-icon stat-icon-events">
+        <span class="material-symbols-outlined">history</span>
+      </div>
+      <div class="stat-info">
+        <p class="stat-label">Eventos</p>
+        <p class="stat-number">{{ stats.totalEventos }}</p>
+        <p class="stat-detail">{{ stats.eventosHoje }} hoje</p>
+      </div>
+    </article>
+    <article class="stat-card-dash">
+      <div class="stat-icon stat-icon-lock" [class.stat-icon-open]="trancaStatusAtual === 'destravada'">
+        <span class="material-symbols-outlined">{{ trancaStatusAtual === 'travada' ? 'lock' : 'lock_open' }}</span>
+      </div>
+      <div class="stat-info">
+        <p class="stat-label">Tranca</p>
+        <p class="stat-number">{{ trancaStatusAtual === 'travada' ? 'Travada' : 'Aberta' }}</p>
+        <p class="stat-detail">{{ stats.totalAberturas }} aberturas</p>
+      </div>
+    </article>
+    <article class="stat-card-dash">
+      <div class="stat-icon stat-icon-ratio">
+        <span class="material-symbols-outlined">swap_horiz</span>
+      </div>
+      <div class="stat-info">
+        <p class="stat-label">Proporcao</p>
+        <p class="stat-number">{{ stats.totalEventos > 0 ? (stats.totalAberturas / stats.totalEventos * 100 | number:'1.0-0') : 0 }}%</p>
+        <p class="stat-detail">aberturas / total</p>
+      </div>
+    </article>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="charts-row">
+    <article class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="eyebrow">Analytics</p>
+          <h3>Atividade nos ultimos 7 dias</h3>
+        </div>
+        <span class="pill pill-info">{{ stats.totalEventos }} eventos</span>
+      </div>
+      <div class="chart-body">
+        <canvas #activityChart height="220"></canvas>
+      </div>
+    </article>
+    <article class="chart-card">
+      <div class="chart-header">
+        <div>
+          <p class="eyebrow">Distribuicao</p>
+          <h3>Eventos por tipo</h3>
+        </div>
+        <span class="pill pill-success">{{ stats.totalAberturas }} aberturas</span>
+      </div>
+      <div class="chart-body chart-body-donut">
+        <canvas #distributionChart height="220"></canvas>
+      </div>
+    </article>
+  </div>
+
+  <!-- Atividade do Cofre -->
+  <article class="activity-card">
+    <div class="activity-header">
+      <p class="eyebrow">Monitoramento</p>
+      <h3>Atividade do cofre</h3>
+    </div>
+    <div class="activity-grid">
+      <div class="activity-item">
+        <div class="activity-icon-box activity-icon-open">
+          <span class="material-symbols-outlined">lock_open</span>
+        </div>
+        <div>
+          <p class="activity-label">Ultima abertura</p>
+          <p class="activity-value">{{ ultimaAbertura ? formatDateTime(ultimaAbertura.data_hora) : 'Nenhuma' }}</p>
+          <p class="activity-sub">{{ ultimaAbertura ? origemLabel(ultimaAbertura.origem) : '-' }}</p>
+        </div>
+      </div>
+      <div class="activity-item">
+        <div class="activity-icon-box activity-icon-tentativa">
+          <span class="material-symbols-outlined">error</span>
+        </div>
+        <div>
+          <p class="activity-label">Tentativas invalidas hoje</p>
+          <p class="activity-value">{{ tentativasHoje }}</p>
+          <p class="activity-sub">{{ tentativasHoje === 1 ? 'tentativa' : 'tentativas' }}</p>
+        </div>
+      </div>
+      <div class="activity-item">
+        <div class="activity-icon-box activity-icon-ultima">
+          <span class="material-symbols-outlined">schedule</span>
+        </div>
+        <div>
+          <p class="activity-label">Ultima tentativa</p>
+          <p class="activity-value">{{ ultimaTentativaInvalida ? formatDateTime(ultimaTentativaInvalida.data_hora) : 'Nenhuma' }}</p>
+          <p class="activity-sub">{{ ultimaTentativaInvalida ? obterLoginUsuario(ultimaTentativaInvalida.usuario_id) : '-' }}</p>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- Users & Logs Row -->
+  <div class="data-row">
+    <!-- Users Table -->
+    <article class="data-card">
+      <div class="data-header">
+        <div>
+          <p class="eyebrow">Administracao</p>
+          <h3>Usuarios do sistema</h3>
+        </div>
+        <span class="pill">{{ stats.totalUsuarios }} usuarios</span>
+      </div>
+      <div class="data-body">
+        @if (!usuariosPaginados.length) {
+          <div class="empty-state">Nenhum usuario cadastrado.</div>
+        } @else {
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Login</th>
+                  <th>Nivel</th>
+                  <th>Status</th>
+                  <th>Permissao</th>
+                  <th>Acao</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of usuariosPaginados; track item[0]) {
+                  <tr>
+                    <td>
+                      <div class="user-cell">
+                        <span class="user-avatar">{{ getFirstChar(item[1].login) }}</span>
+                        <div>
+                          <p class="user-name">{{ item[1].login || '-' }}</p>
+                          <p class="user-id">{{ item[0].slice(0, 8) }}...</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge" [class.badge-admin]="item[1].nivel === 'proprietario'" [class.badge-user]="item[1].nivel !== 'proprietario'">
+                        {{ item[1].nivel || 'usuario' }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="status-dot" [class.active]="item[1].ativo" [class.inactive]="!item[1].ativo"></span>
+                      {{ item[1].ativo ? 'Ativo' : 'Inativo' }}
+                    </td>
+                    <td>
+                      <span class="pill" [class.pill-success]="usuarioPodeDestrancar(item[1])" [class.pill-error]="!usuarioPodeDestrancar(item[1])">
+                        {{ usuarioPodeDestrancar(item[1]) ? 'Permitido' : 'Bloqueado' }}
+                      </span>
+                    </td>
+                    <td>
+                      <label class="toggle-switch">
+                        <input
+                          type="checkbox"
+                          [checked]="usuarioPodeDestrancar(item[1])"
+                          (change)="onTogglePermission(item[0], $event)"
+                        />
+                        <span class="toggle-slider"></span>
+                      </label>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (totalPaginasUsuarios > 1) {
+            <div class="pagination">
+              <p>Pagina {{ usuariosPagina }} de {{ totalPaginasUsuarios }}</p>
+              <div class="pagination-actions">
+                <button class="btn btn-outline" type="button" [disabled]="usuariosPagina === 1" (click)="paginaAnterior()">Anterior</button>
+                <button class="btn btn-outline" type="button" [disabled]="usuariosPagina === totalPaginasUsuarios" (click)="proximaPagina()">Proxima</button>
+              </div>
+            </div>
+          }
+        }
+      </div>
+    </article>
+
+    <!-- Logs Table -->
+    <article class="data-card">
+      <div class="data-header">
+        <div>
+          <p class="eyebrow">Auditoria</p>
+          <h3>Eventos recentes</h3>
+        </div>
+        <span class="pill">{{ logsOrdenados.length }} {{ logsOrdenados.length === 1 ? 'evento' : 'eventos' }}</span>
+        <div class="filter-group">
+          <button class="btn btn-filter" [class.active]="logTipoFiltro === 'todos'" (click)="setFiltroLog('todos')">Todos</button>
+          <button class="btn btn-filter" [class.active]="logTipoFiltro === 'aberturas'" (click)="setFiltroLog('aberturas')">Aberturas</button>
+          <button class="btn btn-filter" [class.active]="logTipoFiltro === 'tentativas'" (click)="setFiltroLog('tentativas')">Tentativas</button>
+          <button class="btn btn-filter" [class.active]="logTipoFiltro === 'fechamentos'" (click)="setFiltroLog('fechamentos')">Fechamentos</button>
+        </div>
+      </div>
+      <div class="data-body">
+        @if (!logsRecentes.length) {
+          <div class="empty-state">Nenhum evento registrado.</div>
+        } @else {
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Usuario</th>
+                  <th>Acao</th>
+                  <th>Resultado</th>
+                  <th>Data / Hora</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (entry of logsRecentes; track entry.id) {
+                  <tr>
+                    <td>
+                      <div class="user-cell">
+                        <span class="user-avatar user-avatar-sm">{{ getFirstChar(obterLoginUsuario(entry.usuario_id)) }}</span>
+                        <span>{{ obterLoginUsuario(entry.usuario_id) }}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span [class]="acaoBadgeClasse(entry.acao)">
+                        <span class="material-symbols-outlined action-icon">{{ acaoIcon(entry.acao) }}</span>
+                        {{ acaoLabel(entry.acao) }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="pill" [class.pill-success]="entry.resultado === 'sucesso'" [class.pill-error]="entry.resultado !== 'sucesso'">
+                        {{ entry.resultado || '-' }}
+                      </span>
+                    </td>
+                    <td class="cell-date">{{ formatDateTime(entry.data_hora) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (totalPaginasLogs > 1) {
+            <div class="pagination">
+              <p>Pagina {{ logsPagina }} de {{ totalPaginasLogs }}</p>
+              <div class="pagination-actions">
+                <button class="btn btn-outline" type="button" [disabled]="logsPagina === 1" (click)="paginaAnteriorLogs()">Anterior</button>
+                <button class="btn btn-outline" type="button" [disabled]="logsPagina === totalPaginasLogs" (click)="proximaPaginaLogs()">Proxima</button>
+              </div>
+            </div>
+          }
+        }
+      </div>
+    </article>
+  </div>
+</section>

@@ -3,21 +3,18 @@ import { Component, DestroyRef, inject } from '@angular/core';
 import { AuthScreenComponent } from './components/auth-screen/auth-screen.component';
 import { DashboardHeaderComponent } from './components/dashboard-header/dashboard-header.component';
 import { LockPanelComponent } from './components/lock-panel/lock-panel.component';
-import { LogsPanelComponent } from './components/logs-panel/logs-panel.component';
-import { UsersPanelComponent } from './components/users-panel/users-panel.component';
+import { AdminDashboardComponent } from './components/admin-dashboard/admin-dashboard.component';
 import {
   AuthMode,
   FeedbackType,
   LockStatus,
   LogEntry,
-  LogViewItem,
   LoginPayload,
   RegisterPayload,
   TrancaState,
   TrancaUltimaAtualizacao,
   Usuario,
-  UsuarioLogado,
-  UserViewItem
+  UsuarioLogado
 } from './core/models';
 import { AuthService } from './services/auth.service';
 import { DatabaseService } from './services/database.service';
@@ -33,8 +30,7 @@ import { UsersService } from './services/users.service';
     AuthScreenComponent,
     DashboardHeaderComponent,
     LockPanelComponent,
-    LogsPanelComponent,
-    UsersPanelComponent
+    AdminDashboardComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
@@ -66,12 +62,6 @@ export class AppComponent {
   ultimaAcao = 'Nenhuma';
   logsSnapshotCache: Record<string, Omit<LogEntry, 'id'>> = {};
   private ultimaNotificacaoTranca = '';
-
-  adminUsuarioSelecionadoId: string | null = null;
-  adminUsuariosPagina = 1;
-  readonly adminPageSize = 6;
-  logsPagina = 1;
-  readonly logsPageSize = 6;
 
   constructor() {
     if (!this.firebasePronto) {
@@ -143,66 +133,6 @@ export class AppComponent {
     return this.logado && this.firebasePronto && !this.bloqueadoPorPermissao();
   }
 
-  get usuariosOrdenados(): Array<[string, Usuario]> {
-    return Object.entries(this.usuariosCache).sort(([, a], [, b]) =>
-      String(a?.login || '').localeCompare(String(b?.login || ''), 'pt-BR', {
-        sensitivity: 'base'
-      })
-    );
-  }
-
-  get totalPaginasAdmin(): number {
-    return Math.max(1, Math.ceil(this.usuariosOrdenados.length / this.adminPageSize));
-  }
-
-  get usuariosPaginados(): Array<[string, Usuario]> {
-    const start = (this.adminUsuariosPagina - 1) * this.adminPageSize;
-    return this.usuariosOrdenados.slice(start, start + this.adminPageSize);
-  }
-
-  get usuariosPaginadosView(): UserViewItem[] {
-    return this.usuariosPaginados.map(([id, usuario]) => ({
-      id,
-      login: usuario.login || id,
-      ativo: Boolean(usuario.ativo),
-      nivel: usuario.nivel || '-',
-      podeDestrancar: this.usuarioPodeDestrancar(usuario)
-    }));
-  }
-
-  get logsOrdenados(): LogEntry[] {
-    return Object.entries(this.logsSnapshotCache)
-      .map(([id, value]) => ({ id, ...value }))
-      .sort(
-        (a, b) => new Date(b.data_hora || 0).getTime() - new Date(a.data_hora || 0).getTime()
-      );
-  }
-
-  get totalPaginasLogs(): number {
-    return Math.max(1, Math.ceil(this.logsOrdenados.length / this.logsPageSize));
-  }
-
-  get logsPaginados(): LogEntry[] {
-    const start = (this.logsPagina - 1) * this.logsPageSize;
-    return this.logsOrdenados.slice(start, start + this.logsPageSize);
-  }
-
-  get logsCounterText(): string {
-    const total = this.logsOrdenados.length;
-    return `${total} ${total === 1 ? 'registro' : 'registros'}`;
-  }
-
-  get logsPaginadosView(): LogViewItem[] {
-    return this.logsPaginados.map((entry) => ({
-      id: entry.id,
-      usuarioId: entry.usuario_id || '-',
-      usuarioLogin: this.obterLoginUsuario(entry.usuario_id),
-      acao: entry.acao || '-',
-      resultado: entry.resultado || '-',
-      dataHora: this.formatDateTime(entry.data_hora)
-    }));
-  }
-
   usuarioEhAdmin(): boolean {
     return String(this.usuarioLogado?.nivel || '').toLowerCase() === 'proprietario';
   }
@@ -227,28 +157,6 @@ export class AppComponent {
     this.authMode = mode;
   }
 
-  paginaAnteriorAdmin(): void {
-    this.adminUsuariosPagina = Math.max(1, this.adminUsuariosPagina - 1);
-    this.adminUsuarioSelecionadoId = null;
-  }
-
-  proximaPaginaAdmin(): void {
-    this.adminUsuariosPagina = Math.min(this.totalPaginasAdmin, this.adminUsuariosPagina + 1);
-    this.adminUsuarioSelecionadoId = null;
-  }
-
-  paginaAnteriorLogs(): void {
-    this.logsPagina = Math.max(1, this.logsPagina - 1);
-  }
-
-  proximaPaginaLogs(): void {
-    this.logsPagina = Math.min(this.totalPaginasLogs, this.logsPagina + 1);
-  }
-
-  toggleUsuarioExpandido(userId: string): void {
-    this.adminUsuarioSelecionadoId = this.adminUsuarioSelecionadoId === userId ? null : userId;
-  }
-
   async onLoginSubmit(payload: LoginPayload): Promise<void> {
     this.clearLoginError();
 
@@ -268,8 +176,6 @@ export class AppComponent {
       this.logado = true;
       this.clearDashboardFeedback();
       this.loginPreenchidoAposCadastro = '';
-      this.adminUsuariosPagina = 1;
-      this.logsPagina = 1;
     } catch (error) {
       this.showLoginError(
         error instanceof Error
@@ -309,9 +215,6 @@ export class AppComponent {
   logout(): void {
     this.logado = false;
     this.usuarioLogado = null;
-    this.adminUsuarioSelecionadoId = null;
-    this.adminUsuariosPagina = 1;
-    this.logsPagina = 1;
     this.ultimaAcao = 'Nenhuma';
     this.clearDashboardFeedback();
     this.clearLoginError();
@@ -369,18 +272,18 @@ export class AppComponent {
     }
   }
 
-  async atualizarPermissaoUsuario(userId: string, event: Event): Promise<void> {
+  async atualizarPermissaoUsuario(event: { userId: string; event: Event }): Promise<void> {
     if (!this.usuarioEhAdmin()) {
       return;
     }
 
-    const input = event.target as HTMLInputElement;
+    const input = event.event.target as HTMLInputElement;
     const permitir = input.checked;
     input.disabled = true;
     this.clearDashboardFeedback();
 
     try {
-      await this.usersService.updatePermissao(userId, permitir);
+      await this.usersService.updatePermissao(event.userId, permitir);
       this.showDashboardFeedback(
         permitir
           ? 'Permissao atualizada: usuario pode destrancar.'
@@ -396,27 +299,6 @@ export class AppComponent {
     }
   }
 
-  formatDateTime(dateValue?: string): string {
-    const parsed = new Date(dateValue || '');
-
-    if (Number.isNaN(parsed.getTime())) {
-      return dateValue || '-';
-    }
-
-    return new Intl.DateTimeFormat('pt-BR', {
-      dateStyle: 'short',
-      timeStyle: 'medium'
-    }).format(parsed);
-  }
-
-  obterLoginUsuario(userId?: string): string {
-    if (!userId) {
-      return 'desconhecido';
-    }
-
-    return this.usuariosCache[userId]?.login || userId;
-  }
-
   private inicializarRealtime(): void {
     const unsubscribeUsuarios = this.usersService.watchUsuarios((snapshot) => {
       this.processarUsuarios(snapshot);
@@ -426,7 +308,6 @@ export class AppComponent {
     });
     const unsubscribeLogs = this.logsService.watchLogs((logs) => {
       this.logsSnapshotCache = logs;
-      this.ajustarPaginacaoLogs();
     });
 
     if (unsubscribeUsuarios) {
@@ -456,28 +337,11 @@ export class AppComponent {
         ...this.usuariosCache[this.usuarioLogado.id]
       };
     }
-
-    this.ajustarPaginacaoAdmin();
   }
 
   private processarTranca(tranca: TrancaState): void {
     this.trancaStatusAtual = (tranca.status || 'travada') as LockStatus;
     this.processarAtualizacaoRemotaTranca(tranca.ultimaAtualizacao);
-  }
-
-  private ajustarPaginacaoAdmin(): void {
-    this.adminUsuariosPagina = Math.min(this.adminUsuariosPagina, this.totalPaginasAdmin);
-    this.adminUsuariosPagina = Math.max(1, this.adminUsuariosPagina);
-
-    const idsValidos = new Set(this.usuariosPaginados.map(([id]) => id));
-    if (this.adminUsuarioSelecionadoId && !idsValidos.has(this.adminUsuarioSelecionadoId)) {
-      this.adminUsuarioSelecionadoId = null;
-    }
-  }
-
-  private ajustarPaginacaoLogs(): void {
-    this.logsPagina = Math.min(this.logsPagina, this.totalPaginasLogs);
-    this.logsPagina = Math.max(1, this.logsPagina);
   }
 
   private capitalize(value: string): string {
@@ -513,10 +377,9 @@ export class AppComponent {
 
     const usuario = ultimaAtualizacao.usuario_login || ultimaAtualizacao.usuario_id || 'Outro usuario';
     const acao = ultimaAtualizacao.acao === 'abrir' ? 'destrancou' : 'trancou';
-    const horario = this.formatDateTime(ultimaAtualizacao.data_hora);
 
     this.ultimaAcao = this.capitalize(ultimaAtualizacao.acao || 'Nenhuma');
-    this.showDashboardFeedback(`${usuario} ${acao} a tranca em ${horario}.`, 'info');
+    this.showDashboardFeedback(`${usuario} ${acao} a tranca.`, 'info');
   }
 
   private bloqueadoPorPermissao(): boolean {

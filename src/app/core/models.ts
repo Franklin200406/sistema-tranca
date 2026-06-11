@@ -1,6 +1,8 @@
 export type FeedbackType = 'success' | 'error' | 'info';
 export type AuthMode = 'login' | 'register';
 export type LockStatus = 'travada' | 'destravada';
+export type LogAcao = 'abertura_senha' | 'senha_incorreta' | 'abrir' | 'travar';
+export type LogOrigem = 'teclado' | 'site';
 
 export interface Usuario {
   nome?: string;
@@ -20,9 +22,10 @@ export interface UsuarioLogado extends Usuario {
 export interface LogEntry {
   id: string;
   usuario_id?: string;
-  acao?: string;
+  acao?: LogAcao;
   resultado?: string;
   data_hora?: string;
+  origem?: LogOrigem;
 }
 
 export interface TrancaUltimaAtualizacao {
